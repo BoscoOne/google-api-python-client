@@ -468,6 +468,34 @@ class Utilities(unittest.TestCase):
         self.assertEqual(parameters.param_types, param_types)
         self.assertEqual(parameters.enum_params, {})
 
+    def test_ResourceMethodParameters_enum_values_dict(self):
+        method_desc = {
+            "id": "drive.items.conflictBehavior",
+            "path": "drive/items",
+            "httpMethod": "POST",
+            "parameters": {
+                "@microsoft.graph.conflictBehavior": {
+                    "type": "string",
+                    "location": "query",
+                    "enum": [
+                        {"name": "fail", "value": "fail"},
+                        {"name": "rename", "value": "rename"},
+                    ],
+                }
+            },
+        }
+
+        parameters = ResourceMethodParameters(method_desc)
+
+        expected_values = ["fail", "rename"]
+        enum_key = "x_microsoft_graph_conflictBehavior"
+        self.assertIn(enum_key, parameters.enum_params)
+        self.assertEqual(parameters.enum_params[enum_key], expected_values)
+        self.assertEqual(
+            method_desc["parameters"]["@microsoft.graph.conflictBehavior"]["enum"],
+            expected_values,
+        )
+
 
 class Discovery(unittest.TestCase):
     def test_discovery_http_is_closed(self):
