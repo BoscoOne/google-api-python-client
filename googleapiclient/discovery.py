@@ -1037,14 +1037,40 @@ class ResourceMethodParameters(object):
         """
         parameters = method_desc.get("parameters", {})
         sorted_parameters = OrderedDict(sorted(parameters.items()))
+        def _normalize_enum(values):
+            if not isinstance(values, list):
+                return values
+
+            normalized = []
+            modified = False
+            for value in values:
+                normalized_value = value
+                if isinstance(value, dict):
+                    for key in ("value", "id", "name"):
+                        if key in value:
+                            normalized_value = value[key]
+                            break
+                    else:
+                        normalized_value = str(value)
+                    modified = True
+                normalized.append(normalized_value)
+
+            if modified:
+                return normalized
+            return values
+
         for arg, desc in sorted_parameters.items():
             param = key2param(arg)
             self.argmap[param] = arg
 
             if desc.get("pattern"):
                 self.pattern_params[param] = desc["pattern"]
-            if desc.get("enum"):
-                self.enum_params[param] = desc["enum"]
+            enum_values = desc.get("enum")
+            if enum_values is not None:
+                normalized_enum = _normalize_enum(enum_values)
+                self.enum_params[param] = normalized_enum
+                if normalized_enum is not enum_values:
+                    desc["enum"] = normalized_enum
             if desc.get("required"):
                 self.required_params.append(param)
             if desc.get("repeated"):
